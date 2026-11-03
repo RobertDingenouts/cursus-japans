@@ -83,7 +83,7 @@ export default function Course() {
   const meta = levelMeta(level);
   const key = String(level);
   const t = terms[idx];
-  const audioFile = `/audio/japanese/${slug(t?.uitspraak ?? "")}.wav`;
+  const audioFile = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/audio/japanese/${slug(t?.uitspraak ?? "")}.wav`;
   const learnedCount = terms.filter((x) => learned[slug(x.uitspraak)]).length;
 
   function pick(l: string | number) {
