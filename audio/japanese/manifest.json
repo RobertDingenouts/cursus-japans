@@ -1,0 +1,789 @@
+{
+  "voice": "ja-JP-KeitaNeural",
+  "total": 156,
+  "generated": [
+    "dojo.wav",
+    "tatami.wav",
+    "judogi.wav",
+    "sensei.wav",
+    "judoka.wav",
+    "tori.wav",
+    "uke.wav",
+    "rei.wav",
+    "hajime.wav",
+    "matte.wav",
+    "sore-made.wav",
+    "maitta.wav",
+    "kumi-kata.wav",
+    "ne-waza.wav",
+    "tachi-waza.wav",
+    "shiai.wav",
+    "ippon.wav",
+    "waza-ari.wav",
+    "shido.wav",
+    "hansoku-make.wav",
+    "osaekomi.wav",
+    "toketa.wav",
+    "golden-score.wav",
+    "kuzushi.wav",
+    "tsukuri.wav",
+    "kake.wav",
+    "ushiro.wav",
+    "ukemi.wav",
+    "ushiro-ukemi.wav",
+    "yoko.wav",
+    "yoko-ukemi.wav",
+    "mae.wav",
+    "mae-ukemi.wav",
+    "zenpo.wav",
+    "kaiten.wav",
+    "zenpo-kaiten.wav",
+    "o.wav",
+    "soto.wav",
+    "gari.wav",
+    "o-soto-gari.wav",
+    "uki.wav",
+    "goshi.wav",
+    "uki-goshi.wav",
+    "seoi.wav",
+    "nage.wav",
+    "ippon-seoi-nage.wav",
+    "tai.wav",
+    "otoshi.wav",
+    "tai-otoshi.wav",
+    "kesa.wav",
+    "gatame.wav",
+    "kesa-gatame.wav",
+    "kuzure.wav",
+    "kuzure-kesa-gatame.wav",
+    "de.wav",
+    "ashi.wav",
+    "barai.wav",
+    "de-ashi-barai.wav",
+    "hiza.wav",
+    "guruma.wav",
+    "hiza-guruma.wav",
+    "kubi.wav",
+    "kubi-nage.wav",
+    "tsuri.wav",
+    "tsuri-goshi.wav",
+    "seoi-nage.wav",
+    "uki-otoshi.wav",
+    "kata.wav",
+    "kata-gatame.wav",
+    "ushiro-kesa-gatame.wav",
+    "ko.wav",
+    "gake.wav",
+    "ko-soto-gake.wav",
+    "uchi.wav",
+    "o-uchi-gari.wav",
+    "ko-uchi-gari.wav",
+    "koshi.wav",
+    "koshi-guruma.wav",
+    "harai.wav",
+    "harai-goshi.wav",
+    "hane.wav",
+    "hane-goshi.wav",
+    "kata-guruma.wav",
+    "hiji.wav",
+    "hiji-otoshi.wav",
+    "sukui.wav",
+    "sukui-nage.wav",
+    "makura.wav",
+    "makura-kesa-gatame.wav",
+    "shiho.wav",
+    "yoko-shiho-gatame.wav",
+    "kuzure-yoko-shiho-gatame.wav",
+    "okuri.wav",
+    "okuri-ashi-barai.wav",
+    "o-soto-guruma.wav",
+    "o-soto-otoshi.wav",
+    "ushiro-goshi.wav",
+    "tsurikomi.wav",
+    "tsurikomi-goshi.wav",
+    "utsuri.wav",
+    "utsuri-goshi.wav",
+    "seoi-otoshi.wav",
+    "mochiage.wav",
+    "mochiage-otoshi.wav",
+    "sumi.wav",
+    "sumi-otoshi.wav",
+    "tomoe.wav",
+    "tomoe-nage.wav",
+    "yoko-tomoe.wav",
+    "maki.wav",
+    "maki-tomoe.wav",
+    "kami.wav",
+    "kami-shiho-gatame.wav",
+    "ko-soto-gari.wav",
+    "sasae.wav",
+    "sasae-tsurikomi-ashi.wav",
+    "harai-tsurikomi-ashi.wav",
+    "mata.wav",
+    "uchi-mata.wav",
+    "o-goshi.wav",
+    "ko-tsuri-goshi.wav",
+    "hidari.wav",
+    "hidari-kata-seoi.wav",
+    "obi.wav",
+    "obi-otoshi.wav",
+    "dori.wav",
+    "kata-ashi-dori.wav",
+    "makikomi.wav",
+    "soto-makikomi.wav",
+    "yoko-gake.wav",
+    "tani.wav",
+    "tani-otoshi.wav",
+    "gaeshi.wav",
+    "sumi-gaeshi.wav",
+    "uki-waza.wav",
+    "soto-gake.wav",
+    "ko-uchi-makikomi.wav",
+    "ashi-guruma.wav",
+    "o-guruma.wav",
+    "yama.wav",
+    "arashi.wav",
+    "yama-arashi.wav",
+    "obi-goshi.wav",
+    "age.wav",
+    "seoi-age.wav",
+    "ryo-ashi-dori.wav",
+    "hane-makikomi.wav",
+    "ura.wav",
+    "ura-nage.wav",
+    "yoko-guruma.wav",
+    "wakare.wav",
+    "yoko-wakare.wav",
+    "tawara.wav",
+    "tawara-gaeshi.wav",
+    "uki-gatame.wav",
+    "ura-gatame.wav"
+  ],
+  "failed": [],
+  "terms": [
+    {
+      "term": "Dojo",
+      "file": "dojo.wav"
+    },
+    {
+      "term": "Tatami",
+      "file": "tatami.wav"
+    },
+    {
+      "term": "Judogi",
+      "file": "judogi.wav"
+    },
+    {
+      "term": "Sensei",
+      "file": "sensei.wav"
+    },
+    {
+      "term": "Judoka",
+      "file": "judoka.wav"
+    },
+    {
+      "term": "Tori",
+      "file": "tori.wav"
+    },
+    {
+      "term": "Uke",
+      "file": "uke.wav"
+    },
+    {
+      "term": "Rei",
+      "file": "rei.wav"
+    },
+    {
+      "term": "Hajime",
+      "file": "hajime.wav"
+    },
+    {
+      "term": "Matte",
+      "file": "matte.wav"
+    },
+    {
+      "term": "Sore made",
+      "file": "sore-made.wav"
+    },
+    {
+      "term": "Maitta",
+      "file": "maitta.wav"
+    },
+    {
+      "term": "Kumi-kata",
+      "file": "kumi-kata.wav"
+    },
+    {
+      "term": "Ne-waza",
+      "file": "ne-waza.wav"
+    },
+    {
+      "term": "Tachi-waza",
+      "file": "tachi-waza.wav"
+    },
+    {
+      "term": "Shiai",
+      "file": "shiai.wav"
+    },
+    {
+      "term": "Ippon",
+      "file": "ippon.wav"
+    },
+    {
+      "term": "Waza-ari",
+      "file": "waza-ari.wav"
+    },
+    {
+      "term": "Shido",
+      "file": "shido.wav"
+    },
+    {
+      "term": "Hansoku-make",
+      "file": "hansoku-make.wav"
+    },
+    {
+      "term": "Osaekomi",
+      "file": "osaekomi.wav"
+    },
+    {
+      "term": "Toketa",
+      "file": "toketa.wav"
+    },
+    {
+      "term": "Golden Score",
+      "file": "golden-score.wav"
+    },
+    {
+      "term": "Kuzushi",
+      "file": "kuzushi.wav"
+    },
+    {
+      "term": "Tsukuri",
+      "file": "tsukuri.wav"
+    },
+    {
+      "term": "Kake",
+      "file": "kake.wav"
+    },
+    {
+      "term": "Ushiro",
+      "file": "ushiro.wav"
+    },
+    {
+      "term": "Ukemi",
+      "file": "ukemi.wav"
+    },
+    {
+      "term": "Ushiro-ukemi",
+      "file": "ushiro-ukemi.wav"
+    },
+    {
+      "term": "Yoko",
+      "file": "yoko.wav"
+    },
+    {
+      "term": "Yoko-ukemi",
+      "file": "yoko-ukemi.wav"
+    },
+    {
+      "term": "Mae",
+      "file": "mae.wav"
+    },
+    {
+      "term": "Mae-ukemi",
+      "file": "mae-ukemi.wav"
+    },
+    {
+      "term": "Zenpo",
+      "file": "zenpo.wav"
+    },
+    {
+      "term": "Kaiten",
+      "file": "kaiten.wav"
+    },
+    {
+      "term": "Zenpo-kaiten",
+      "file": "zenpo-kaiten.wav"
+    },
+    {
+      "term": "O",
+      "file": "o.wav"
+    },
+    {
+      "term": "Soto",
+      "file": "soto.wav"
+    },
+    {
+      "term": "Gari",
+      "file": "gari.wav"
+    },
+    {
+      "term": "O-soto-gari",
+      "file": "o-soto-gari.wav"
+    },
+    {
+      "term": "Uki",
+      "file": "uki.wav"
+    },
+    {
+      "term": "Goshi",
+      "file": "goshi.wav"
+    },
+    {
+      "term": "Uki-goshi",
+      "file": "uki-goshi.wav"
+    },
+    {
+      "term": "Seoi",
+      "file": "seoi.wav"
+    },
+    {
+      "term": "Nage",
+      "file": "nage.wav"
+    },
+    {
+      "term": "Ippon-seoi-nage",
+      "file": "ippon-seoi-nage.wav"
+    },
+    {
+      "term": "Tai",
+      "file": "tai.wav"
+    },
+    {
+      "term": "Otoshi",
+      "file": "otoshi.wav"
+    },
+    {
+      "term": "Tai-otoshi",
+      "file": "tai-otoshi.wav"
+    },
+    {
+      "term": "Kesa",
+      "file": "kesa.wav"
+    },
+    {
+      "term": "Gatame",
+      "file": "gatame.wav"
+    },
+    {
+      "term": "Kesa-gatame",
+      "file": "kesa-gatame.wav"
+    },
+    {
+      "term": "Kuzure",
+      "file": "kuzure.wav"
+    },
+    {
+      "term": "Kuzure-kesa-gatame",
+      "file": "kuzure-kesa-gatame.wav"
+    },
+    {
+      "term": "De",
+      "file": "de.wav"
+    },
+    {
+      "term": "Ashi",
+      "file": "ashi.wav"
+    },
+    {
+      "term": "Barai",
+      "file": "barai.wav"
+    },
+    {
+      "term": "De-ashi-barai",
+      "file": "de-ashi-barai.wav"
+    },
+    {
+      "term": "Hiza",
+      "file": "hiza.wav"
+    },
+    {
+      "term": "Guruma",
+      "file": "guruma.wav"
+    },
+    {
+      "term": "Hiza-guruma",
+      "file": "hiza-guruma.wav"
+    },
+    {
+      "term": "Kubi",
+      "file": "kubi.wav"
+    },
+    {
+      "term": "Kubi-nage",
+      "file": "kubi-nage.wav"
+    },
+    {
+      "term": "Tsuri",
+      "file": "tsuri.wav"
+    },
+    {
+      "term": "Tsuri-goshi",
+      "file": "tsuri-goshi.wav"
+    },
+    {
+      "term": "Seoi-nage",
+      "file": "seoi-nage.wav"
+    },
+    {
+      "term": "Uki-otoshi",
+      "file": "uki-otoshi.wav"
+    },
+    {
+      "term": "Kata",
+      "file": "kata.wav"
+    },
+    {
+      "term": "Kata-gatame",
+      "file": "kata-gatame.wav"
+    },
+    {
+      "term": "Ushiro-kesa-gatame",
+      "file": "ushiro-kesa-gatame.wav"
+    },
+    {
+      "term": "Ko",
+      "file": "ko.wav"
+    },
+    {
+      "term": "Gake",
+      "file": "gake.wav"
+    },
+    {
+      "term": "Ko-soto-gake",
+      "file": "ko-soto-gake.wav"
+    },
+    {
+      "term": "Uchi",
+      "file": "uchi.wav"
+    },
+    {
+      "term": "O-uchi-gari",
+      "file": "o-uchi-gari.wav"
+    },
+    {
+      "term": "Ko-uchi-gari",
+      "file": "ko-uchi-gari.wav"
+    },
+    {
+      "term": "Koshi",
+      "file": "koshi.wav"
+    },
+    {
+      "term": "Koshi-guruma",
+      "file": "koshi-guruma.wav"
+    },
+    {
+      "term": "Harai",
+      "file": "harai.wav"
+    },
+    {
+      "term": "Harai-goshi",
+      "file": "harai-goshi.wav"
+    },
+    {
+      "term": "Hane",
+      "file": "hane.wav"
+    },
+    {
+      "term": "Hane-goshi",
+      "file": "hane-goshi.wav"
+    },
+    {
+      "term": "Kata-guruma",
+      "file": "kata-guruma.wav"
+    },
+    {
+      "term": "Hiji",
+      "file": "hiji.wav"
+    },
+    {
+      "term": "Hiji-otoshi",
+      "file": "hiji-otoshi.wav"
+    },
+    {
+      "term": "Sukui",
+      "file": "sukui.wav"
+    },
+    {
+      "term": "Sukui-nage",
+      "file": "sukui-nage.wav"
+    },
+    {
+      "term": "Makura",
+      "file": "makura.wav"
+    },
+    {
+      "term": "Makura-kesa-gatame",
+      "file": "makura-kesa-gatame.wav"
+    },
+    {
+      "term": "Shiho",
+      "file": "shiho.wav"
+    },
+    {
+      "term": "Yoko-shiho-gatame",
+      "file": "yoko-shiho-gatame.wav"
+    },
+    {
+      "term": "Kuzure-yoko-shiho-gatame",
+      "file": "kuzure-yoko-shiho-gatame.wav"
+    },
+    {
+      "term": "Okuri",
+      "file": "okuri.wav"
+    },
+    {
+      "term": "Okuri-ashi-barai",
+      "file": "okuri-ashi-barai.wav"
+    },
+    {
+      "term": "O-soto-guruma",
+      "file": "o-soto-guruma.wav"
+    },
+    {
+      "term": "O-soto-otoshi",
+      "file": "o-soto-otoshi.wav"
+    },
+    {
+      "term": "Ushiro-goshi",
+      "file": "ushiro-goshi.wav"
+    },
+    {
+      "term": "Tsurikomi",
+      "file": "tsurikomi.wav"
+    },
+    {
+      "term": "Tsurikomi-goshi",
+      "file": "tsurikomi-goshi.wav"
+    },
+    {
+      "term": "Utsuri",
+      "file": "utsuri.wav"
+    },
+    {
+      "term": "Utsuri-goshi",
+      "file": "utsuri-goshi.wav"
+    },
+    {
+      "term": "Seoi-otoshi",
+      "file": "seoi-otoshi.wav"
+    },
+    {
+      "term": "Mochiage",
+      "file": "mochiage.wav"
+    },
+    {
+      "term": "Mochiage-otoshi",
+      "file": "mochiage-otoshi.wav"
+    },
+    {
+      "term": "Sumi",
+      "file": "sumi.wav"
+    },
+    {
+      "term": "Sumi-otoshi",
+      "file": "sumi-otoshi.wav"
+    },
+    {
+      "term": "Tomoe",
+      "file": "tomoe.wav"
+    },
+    {
+      "term": "Tomoe-nage",
+      "file": "tomoe-nage.wav"
+    },
+    {
+      "term": "Yoko-tomoe",
+      "file": "yoko-tomoe.wav"
+    },
+    {
+      "term": "Maki",
+      "file": "maki.wav"
+    },
+    {
+      "term": "Maki-tomoe",
+      "file": "maki-tomoe.wav"
+    },
+    {
+      "term": "Kami",
+      "file": "kami.wav"
+    },
+    {
+      "term": "Kami-shiho-gatame",
+      "file": "kami-shiho-gatame.wav"
+    },
+    {
+      "term": "Ko-soto-gari",
+      "file": "ko-soto-gari.wav"
+    },
+    {
+      "term": "Sasae",
+      "file": "sasae.wav"
+    },
+    {
+      "term": "Sasae-tsurikomi-ashi",
+      "file": "sasae-tsurikomi-ashi.wav"
+    },
+    {
+      "term": "Harai-tsurikomi-ashi",
+      "file": "harai-tsurikomi-ashi.wav"
+    },
+    {
+      "term": "Mata",
+      "file": "mata.wav"
+    },
+    {
+      "term": "Uchi-mata",
+      "file": "uchi-mata.wav"
+    },
+    {
+      "term": "O-goshi",
+      "file": "o-goshi.wav"
+    },
+    {
+      "term": "Ko-tsuri-Goshi",
+      "file": "ko-tsuri-goshi.wav"
+    },
+    {
+      "term": "Hidari",
+      "file": "hidari.wav"
+    },
+    {
+      "term": "Hidari-kata-seoi",
+      "file": "hidari-kata-seoi.wav"
+    },
+    {
+      "term": "Obi",
+      "file": "obi.wav"
+    },
+    {
+      "term": "Obi-otoshi",
+      "file": "obi-otoshi.wav"
+    },
+    {
+      "term": "Dori",
+      "file": "dori.wav"
+    },
+    {
+      "term": "Kata-ashi-dori",
+      "file": "kata-ashi-dori.wav"
+    },
+    {
+      "term": "Makikomi",
+      "file": "makikomi.wav"
+    },
+    {
+      "term": "Soto-makikomi",
+      "file": "soto-makikomi.wav"
+    },
+    {
+      "term": "Yoko-gake",
+      "file": "yoko-gake.wav"
+    },
+    {
+      "term": "Tani",
+      "file": "tani.wav"
+    },
+    {
+      "term": "Tani-otoshi",
+      "file": "tani-otoshi.wav"
+    },
+    {
+      "term": "Gaeshi",
+      "file": "gaeshi.wav"
+    },
+    {
+      "term": "Sumi-gaeshi",
+      "file": "sumi-gaeshi.wav"
+    },
+    {
+      "term": "Uki-waza",
+      "file": "uki-waza.wav"
+    },
+    {
+      "term": "Soto-gake",
+      "file": "soto-gake.wav"
+    },
+    {
+      "term": "Ko-uchi-makikomi",
+      "file": "ko-uchi-makikomi.wav"
+    },
+    {
+      "term": "Ashi-Guruma",
+      "file": "ashi-guruma.wav"
+    },
+    {
+      "term": "O-guruma",
+      "file": "o-guruma.wav"
+    },
+    {
+      "term": "Yama",
+      "file": "yama.wav"
+    },
+    {
+      "term": "Arashi",
+      "file": "arashi.wav"
+    },
+    {
+      "term": "Yama-arashi",
+      "file": "yama-arashi.wav"
+    },
+    {
+      "term": "Obi-goshi",
+      "file": "obi-goshi.wav"
+    },
+    {
+      "term": "Age",
+      "file": "age.wav"
+    },
+    {
+      "term": "Seoi-age",
+      "file": "seoi-age.wav"
+    },
+    {
+      "term": "Ryo-ashi-dori",
+      "file": "ryo-ashi-dori.wav"
+    },
+    {
+      "term": "Hane-makikomi",
+      "file": "hane-makikomi.wav"
+    },
+    {
+      "term": "Ura",
+      "file": "ura.wav"
+    },
+    {
+      "term": "Ura-nage",
+      "file": "ura-nage.wav"
+    },
+    {
+      "term": "Yoko-guruma",
+      "file": "yoko-guruma.wav"
+    },
+    {
+      "term": "Wakare",
+      "file": "wakare.wav"
+    },
+    {
+      "term": "Yoko-wakare",
+      "file": "yoko-wakare.wav"
+    },
+    {
+      "term": "Tawara",
+      "file": "tawara.wav"
+    },
+    {
+      "term": "Tawara-Gaeshi",
+      "file": "tawara-gaeshi.wav"
+    },
+    {
+      "term": "Uki-gatame",
+      "file": "uki-gatame.wav"
+    },
+    {
+      "term": "Ura-gatame",
+      "file": "ura-gatame.wav"
+    }
+  ]
+}
