@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #faf7f1;
+  --ink: #1f2937;
+  --tatami: #d9c9a3;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.tatami {
+  background-image: repeating-linear-gradient(
+      0deg,
+      rgba(160, 130, 70, 0.06) 0px,
+      rgba(160, 130, 70, 0.06) 1px,
+      transparent 1px,
+      transparent 44px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(160, 130, 70, 0.06) 0px,
+      rgba(160, 130, 70, 0.06) 1px,
+      transparent 1px,
+      transparent 44px
+    );
+}
+
+.card3d {
+  perspective: 1200px;
+}
+.card-inner {
+  transition: transform 0.5s cubic-bezier(0.4, 0.1, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.card-inner.flipped {
+  transform: rotateY(180deg);
+}
+.card-face {
+  backface-visibility: hidden;
+}
+.card-back {
+  transform: rotateY(180deg);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #cert-print,
+  #cert-print * {
+    visibility: visible;
+  }
+  #cert-print {
+    position: fixed;
+    inset: 0;
+    border: 4px double #8b4513;
+  }
+}
