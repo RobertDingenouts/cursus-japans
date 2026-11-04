@@ -4,12 +4,14 @@
 
 **Live demo:** https://robertdingenouts.github.io/cursus-japans/ — alles draait in je browser, geen account, geen tracking.
 
-Leermodule die ik bouwde voor mijn judoclub: 157 Japanse judotermen, van witte tot bruine band, met flashcards, quiz per band en een printbaar certificaat. Het bijzondere: **elk woord klinkt in het Japans** — 157 audiotjes die ik vooraf lokaal genereerde met een eigen tekst-naar-spraakpijplijn (Edge TTS), dus geen cloud en geen kosten per afspeelbeurt.
+Leermodule uit mijn clubplatform, in dezelfde huisstijl, nu los en zonder login inzetbaar: 157 Japanse judotermen, van witte tot bruine band, met flashcards, quiz per band en een printbaar certificaat. Het bijzondere: **elk woord klinkt in het Japans** — 157 audiotjes die ik vooraf lokaal genereerde met een eigen tekst-naar-spraakpijplijn (Edge TTS), dus geen cloud en geen kosten per afspeelbeurt.
 
+![start](assets/screenshot-start.png)
 ![flashcards](assets/screenshot-flashcard.png)
-![quiz](assets/screenshot-quiz.png)
+![quiz-feedback](assets/screenshot-quiz-feedback.png)
+![mobiel](assets/screenshot-mobiel.png)
 
-**Demo (12 seconden):** [assets/demo.mp4](assets/demo.mp4)
+**Demo (10 seconden):** [assets/demo.mp4](assets/demo.mp4)
 
 ## Wat het doet
 

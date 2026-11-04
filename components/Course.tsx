@@ -1,323 +1,624 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+// Cursus Japans — losse statische versie, in dezelfde huisstijl als het clubplatform
+// (judoclubmichigami.nl). Alle progressie blijft in de browser (localStorage).
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  Star,
+  Trophy,
+  Lock,
+  BookOpen,
+} from "lucide-react";
 import { japaneseCourseData, beltColors } from "@/data/terms";
+
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const ORDER: (string | number)[] = ["algemeen", "wedstrijd", 0, 1, 2, 3, 4, 5];
+const BELT_ORDER = [0, 1, 2, 3, 4, 5];
 
 type Term = { uitspraak: string; nederlands: string; categorie: string; level: string | number };
 
-const ORDER: (string | number)[] = ["algemeen", "wedstrijd", 0, 1, 2, 3, 4, 5];
-
-const slug = (t: string) => t.toLowerCase().replace(/\s+/g, "-");
+const slug = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
+const getAudioPath = (term: string) => `${BASE_PATH}/audio/japanese/${slug(term)}.wav`;
 
 function levelMeta(level: string | number) {
   const c = (beltColors as Record<string | number, { bg: string; text: string; border: string; label: string }>)[level];
   if (c) return { ...c, name: japaneseCourseData.levelNames[level] ?? String(level) };
-  return { bg: "#ede9fe", text: "#5b21b6", border: "#8b5cf6", label: "", name: japaneseCourseData.levelNames[level] ?? String(level) };
+  return { bg: "#fdf6f6", text: "#a90000", border: "#a90000", label: "", name: japaneseCourseData.levelNames[level] ?? String(level) };
 }
 
-type Progress = Record<string, { best: number; passed: boolean }>;
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ---------------------------------------------------------------- audio
+
+function useSounds() {
+  const [enabled, setEnabled] = useState(true);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const getCtx = useCallback(() => {
+    if (!ctxRef.current) ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    return ctxRef.current;
+  }, []);
+  const playTone = useCallback(
+    (freq: number, duration: number, type: OscillatorType = "sine", volume = 0.15) => {
+      if (!enabled) return;
+      try {
+        const ctx = getCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(volume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch {}
+    },
+    [enabled, getCtx]
+  );
+  const sounds = useMemo(
+    () => ({
+      click: () => playTone(600, 0.06, "sine", 0.06),
+      flip: () => playTone(800, 0.1, "sine", 0.08),
+      correct: () => {
+        playTone(523, 0.15, "sine", 0.12);
+        setTimeout(() => playTone(659, 0.15, "sine", 0.12), 100);
+        setTimeout(() => playTone(784, 0.2, "sine", 0.12), 200);
+      },
+      wrong: () => {
+        playTone(220, 0.18, "square", 0.09);
+        setTimeout(() => playTone(165, 0.32, "square", 0.09), 140);
+      },
+      pass: () => [523, 659, 784, 1047].forEach((n, i) => setTimeout(() => playTone(n, 0.3, "sine", 0.15), i * 150)),
+      fail: () => playTone(196, 0.4, "triangle", 0.12),
+      unlock: () => [392, 523, 659].forEach((n, i) => setTimeout(() => playTone(n, 0.25, "sine", 0.13), i * 120)),
+    }),
+    [playTone]
+  );
+  return { sounds, enabled, setEnabled };
+}
+
+function PlayButton({ term, size = "md" }: { term: string; size?: "sm" | "md" }) {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const iconSize = size === "sm" ? "w-4 h-4" : "w-5 h-5";
+  const btnPadding = size === "sm" ? "p-2" : "p-2.5";
+  const play = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    const audio = new Audio(getAudioPath(term));
+    audioRef.current = audio;
+    setPlaying(true);
+    audio.play().catch(() => {});
+    audio.onended = () => setPlaying(false);
+    audio.onerror = () => setPlaying(false);
+  };
+  return (
+    <button
+      onClick={play}
+      className={`${btnPadding} rounded-lg bg-[#fdf6f6] hover:bg-[#fce4e4] border border-[#eeddd6] hover:border-[#a90000] transition-all flex items-center justify-center ${playing ? "text-[#a90000] scale-110" : "text-gray-400 hover:text-[#a90000]"}`}
+      title="Uitspraak horen"
+      aria-label={`uitspraak van ${term} horen`}
+    >
+      <Volume2 className={`${iconSize} ${playing ? "animate-pulse" : ""}`} />
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------- confetti
+
+function Confetti({ active }: { active: boolean }) {
+  if (!active) return null;
+  const particles = Array.from({ length: 50 }, (_, i) => {
+    const color = ["#a90000", "#FFD700", "#FF6B35", "#4CAF50", "#2196F3", "#9C27B0"][Math.floor(Math.random() * 6)];
+    const size = 6 + Math.random() * 8;
+    return (
+      <div
+        key={i}
+        className="absolute pointer-events-none"
+        style={{
+          left: `${Math.random() * 100}%`,
+          top: "-10px",
+          width: `${size}px`,
+          height: `${size}px`,
+          backgroundColor: color,
+          borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+          animation: `confettiFall ${2 + Math.random() * 2}s ease-in ${Math.random() * 2}s forwards`,
+        }}
+      />
+    );
+  });
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
+      <style>{`@keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
+      {particles}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- flashcard
+
+function Flashcard({ term, onFlip }: { term: Term; onFlip: () => void }) {
+  const [flipped, setFlipped] = useState(false);
+  useEffect(() => setFlipped(false), [term.uitspraak]);
+  return (
+    <div className="cursor-pointer select-none" onClick={() => { setFlipped(!flipped); onFlip(); }}>
+      <div
+        className={`relative w-full h-[280px] sm:h-[320px] transition-transform duration-500 ${flipped ? "[transform:rotateY(180deg)]" : ""}`}
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        <div
+          className="absolute inset-0 bg-white rounded-lg shadow-lg border-2 border-[#e9e0cf] flex flex-col items-center justify-center p-4 sm:p-6"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <span className="inline-block px-3 py-1 bg-[#a90000] text-white text-xs font-bold rounded-lg mb-4">{term.categorie}</span>
+          <div className="flex items-center gap-3">
+            <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#a90000] text-center break-words">{term.uitspraak}</h3>
+            <PlayButton term={term.uitspraak} />
+          </div>
+          <p className="text-gray-400 text-xs mt-4">klik om te draaien · of spatiebalk</p>
+        </div>
+        <div
+          className="absolute inset-0 bg-[#fdf6f6] rounded-lg shadow-lg border-2 border-[#a90000] flex flex-col items-center justify-center p-4 sm:p-6"
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+        >
+          <span className="inline-block px-3 py-1 bg-[#a90000] text-white text-xs font-bold rounded-lg mb-3">{term.categorie}</span>
+          <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center break-words w-full">{term.nederlands}</p>
+          <div className="flex items-center gap-2 mt-3">
+            <span className="text-sm text-[#a90000] font-semibold">{term.uitspraak}</span>
+            <PlayButton term={term.uitspraak} size="sm" />
+          </div>
+          <p className="text-gray-400 text-xs mt-4">klik om terug te gaan</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- quiz
+
+type QuizProps = {
+  levelId: string | number;
+  terms: Term[];
+  sounds: ReturnType<typeof useSounds>["sounds"];
+  onPass: (score: number, total: number) => void;
+  onExit: () => void;
+  onNextLevel?: () => void;
+};
+
+function QuizMode({ levelId, terms, sounds, onPass, onExit, onNextLevel }: QuizProps) {
+  const allTerms = japaneseCourseData.terms as Term[];
+  const [questions, setQuestions] = useState<Term[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [wasWrong, setWasWrong] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const wrongPool = useMemo(() => Array.from(new Set(allTerms.map((x) => x.nederlands))), [allTerms]);
+
+  function startQuiz() {
+    setQuestions(shuffle(terms).slice(0, Math.min(15, terms.length)));
+    setCurrentIndex(0);
+    setScore(0);
+    setSelected(null);
+    setShowFeedback(false);
+    setFinished(false);
+    setWasWrong(false);
+  }
+
+  useEffect(() => {
+    startQuiz();
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelId]);
+
+  const optionsByQuestion = useMemo(
+    () =>
+      questions.map((q) => {
+        const wrong = shuffle(wrongPool.filter((n) => n !== q.nederlands)).slice(0, 3);
+        return shuffle([q.nederlands, ...wrong]);
+      }),
+    [questions, wrongPool]
+  );
+
+  function handleAnswer(option: string) {
+    if (showFeedback || !questions.length) return;
+    const q = questions[currentIndex];
+    const isCorrect = option === q.nederlands;
+    setSelected(option);
+    setShowFeedback(true);
+    setWasWrong(!isCorrect);
+    if (isCorrect) {
+      setScore((s) => s + 1);
+      sounds.correct();
+    } else {
+      sounds.wrong();
+      try {
+        navigator.vibrate?.([60, 40, 90]);
+      } catch {}
+    }
+    timerRef.current = setTimeout(() => {
+      if (currentIndex + 1 >= questions.length) {
+        const finalScore = score + (isCorrect ? 1 : 0);
+        setFinished(true);
+        if (finalScore / questions.length >= 0.8) {
+          sounds.pass();
+          onPass(finalScore, questions.length);
+        } else sounds.fail();
+      } else {
+        setCurrentIndex((i) => i + 1);
+        setSelected(null);
+        setShowFeedback(false);
+        setWasWrong(false);
+      }
+    }, isCorrect ? 1100 : 2200);
+  }
+
+  if (!questions.length) return null;
+
+  if (finished) {
+    const percentage = Math.round((score / questions.length) * 100);
+    const passed = percentage >= 80;
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-[#e9e0cf] p-6 sm:p-8 text-center">
+        <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg mx-auto mb-4 flex items-center justify-center ${passed ? "bg-gradient-to-br from-yellow-400 to-yellow-600" : "bg-gray-200"}`}>
+          {passed ? <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-white" /> : <RotateCcw className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+        </div>
+        <h3 className={`text-xl sm:text-2xl font-bold mb-1 ${passed ? "text-[#198754]" : "text-[#dc3545]"}`}>{passed ? "🎉 Gefeliciteerd!" : "Blijf oefenen!"}</h3>
+        <p className="text-4xl sm:text-5xl font-bold text-[#8c0000] my-3">
+          {score} / {questions.length}
+        </p>
+        <p className="text-gray-500 mb-2">
+          {percentage}% goed — {passed ? "(≥80% geslaagd!)" : "(min. 80% nodig)"}
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 mt-5">
+          {passed && onNextLevel && (
+            <button onClick={onNextLevel} className="bg-gradient-to-r from-[#a90000] to-[#8c0000] hover:from-[#8c0000] hover:to-[#700000] text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md hover:shadow-lg">
+              Volgende band →
+            </button>
+          )}
+          <button onClick={startQuiz} className="bg-white border-2 border-gray-200 hover:border-[#a90000] text-gray-600 hover:text-[#a90000] px-6 py-2.5 rounded-lg font-semibold text-sm transition-colors">
+            Opnieuw proberen
+          </button>
+          <button onClick={onExit} className="bg-white border-2 border-[#a90000] text-[#a90000] hover:bg-[#fdf6f6] px-6 py-2.5 rounded-lg font-semibold text-sm transition-colors">
+            ← Terug naar modules
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const question = questions[currentIndex];
+  const options = optionsByQuestion[currentIndex] ?? [];
+  const progress = ((currentIndex + 1) / questions.length) * 100;
+
+  return (
+    <div className={`bg-white rounded-lg shadow-sm border border-[#e9e0cf] p-4 sm:p-6 ${wasWrong ? "quiz-shake" : ""}`}>
+      <div className="w-full h-3 bg-gray-100 rounded-lg mb-4 overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-[#a90000] to-[#8c0000] rounded-lg transition-all duration-500" style={{ width: `${progress}%` }} />
+      </div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-gray-400">Vraag {currentIndex + 1} van {questions.length}</p>
+        <p className="text-xs font-bold text-[#a90000]">Score: {score}</p>
+      </div>
+      <div className="flex items-center justify-center gap-3 mb-1">
+        <h3 className="text-2xl sm:text-3xl font-bold text-[#8c0000] text-center break-words">{question.uitspraak}</h3>
+        <PlayButton term={question.uitspraak} size="sm" />
+      </div>
+      <p className="text-center text-sm text-gray-500 mb-4">Wat betekent dit?</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+        {options.map((option, idx) => {
+          let btnClass = "bg-white border-[#e9e0cf] text-gray-700 hover:border-[#a90000] hover:text-[#a90000] hover:shadow-sm cursor-pointer active:scale-[0.98]";
+          let mark = "";
+          if (showFeedback) {
+            if (option === question.nederlands) {
+              btnClass = "quiz-pop bg-[#198754] border-[#198754] text-white shadow-lg shadow-green-200";
+              mark = "✓";
+            } else if (option === selected) {
+              btnClass = "quiz-wrong bg-[#dc3545] border-[#dc3545] text-white shadow-lg shadow-red-200";
+              mark = "✗";
+            } else btnClass = "bg-gray-50 border-[#e9e0cf] text-gray-300 opacity-60";
+          }
+          return (
+            <button key={`${currentIndex}-${idx}`} onClick={() => handleAnswer(option)} disabled={showFeedback} className={`p-3 sm:p-4 rounded-lg border-2 font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2 ${btnClass}`}>
+              {mark && <span>{mark}</span>}
+              {option}
+            </button>
+          );
+        })}
+      </div>
+      {showFeedback && (
+        <p className={`mt-3 sm:mt-4 text-center font-bold text-sm sm:text-base ${selected === question.nederlands ? "text-[#198754]" : "quiz-pop text-[#dc3545]"}`}>
+          {selected === question.nederlands ? "✓ Correct!" : `✗ Jammer — juist antwoord: ${question.nederlands}`}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- hoofd
+
+type Progress = { passedLevels: Record<string, boolean>; best: Record<string, number> };
+const PROGRESS_KEY = "cj2.p…ress";
 
 export default function Course() {
-  const allTerms = japaneseCourseData.terms as Term[];
-  const [level, setLevel] = useState<string | number>("algemeen");
-  const [mode, setMode] = useState<"cards" | "quiz" | "voortgang">("cards");
-  const [idx, setIdx] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [learned, setLearned] = useState<Record<string, boolean>>({});
-  const [progress, setProgress] = useState<Progress>({});
+  const allTerms = useMemo(() => japaneseCourseData.terms as Term[], []);
+  const [levelId, setLevelId] = useState<string | number | null>(null);
+  const [mode, setMode] = useState<"learn" | "quiz">("learn");
+  const [cardIndex, setCardIndex] = useState(0);
+  const [progress, setProgress] = useState<Progress>({ passedLevels: {}, best: {} });
+  const [confetti, setConfetti] = useState(false);
   const [naam, setNaam] = useState("");
-  const [vandaag, setVandaag] = useState("");
-  const [ready, setReady] = useState(false);
-
-  // quiz state
-  const [qIndex, setQIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [answered, setAnswered] = useState<number | null>(null);
-  const [quizDone, setQuizDone] = useState(false);
-
-  const terms = useMemo(() => allTerms.filter((t) => t.level === level), [allTerms, level]);
-
-  const quiz = useMemo(() => {
-    const pool = [...terms].sort(() => Math.random() - 0.5);
-    const qs = pool.slice(0, Math.min(8, pool.length));
-    return qs.map((q) => {
-      const distractors = allTerms
-        .filter((t) => t.nederlands !== q.nederlands)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3)
-        .map((t) => t.nederlands);
-      const options = [q.nederlands, ...distractors].sort(() => Math.random() - 0.5);
-      return { q, options, answer: q.nederlands };
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level, mode]);
+  const { sounds, enabled: soundOn, setEnabled: setSoundOn } = useSounds();
 
   useEffect(() => {
     try {
-      setLearned(JSON.parse(localStorage.getItem("cj.learned") ?? "{}"));
-      setProgress(JSON.parse(localStorage.getItem("cj.progress") ?? "{}"));
-      setNaam(localStorage.getItem("cj.naam") ?? "");
+      const p = JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? "{}");
+      setProgress({ passedLevels: p.passedLevels ?? {}, best: p.best ?? {} });
+      setNaam(localStorage.getItem("cj2.naam") ?? "");
     } catch {}
-    setVandaag(new Date().toLocaleDateString("nl-NL"));
-    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
-    localStorage.setItem("cj.learned", JSON.stringify(learned));
-    localStorage.setItem("cj.progress", JSON.stringify(progress));
-    localStorage.setItem("cj.naam", naam);
-  }, [learned, progress, naam, ready]);
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+  }, [progress]);
+  useEffect(() => {
+    if (naam) localStorage.setItem("cj2.naam", naam);
+  }, [naam]);
+
+  const level = levelId === null ? null : allTerms.filter((x) => x.level === levelId);
+  const meta = levelId === null ? null : levelMeta(levelId);
+  const currentTerm = level && level.length ? level[Math.min(cardIndex, level.length - 1)] : null;
+
+  function isUnlocked(id: string | number): boolean {
+    if (typeof id === "string" || id === 0) return true;
+    return !!progress.passedLevels[String(BELT_ORDER[BELT_ORDER.indexOf(id) - 1])];
+  }
+
+  function openLevel(id: string | number) {
+    if (!isUnlocked(id)) return;
+    sounds.click();
+    setLevelId(id);
+    setCardIndex(0);
+    setMode("learn");
+  }
+
+  function handlePass(score: number, total: number) {
+    if (levelId === null) return;
+    const key = String(levelId);
+    setProgress((p) => {
+      const wasPassed = p.passedLevels[key];
+      const next = {
+        passedLevels: { ...p.passedLevels, [key]: true },
+        best: { ...p.best, [key]: Math.max(p.best[key] ?? 0, Math.round((score / total) * 100)) },
+      };
+      if (!wasPassed && typeof levelId === "number") sounds.unlock();
+      return next;
+    });
+    setConfetti(true);
+    setTimeout(() => setConfetti(false), 4000);
+  }
+
+  function navCard(dir: "prev" | "next") {
+    if (!level) return;
+    sounds.click();
+    setCardIndex((i) => (dir === "next" ? Math.min(i + 1, level.length - 1) : Math.max(i - 1, 0)));
+  }
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (mode !== "cards") return;
-      if (e.code === "Space") { e.preventDefault(); setFlipped((f) => !f); }
-      if (e.code === "ArrowRight") { setIdx((i) => Math.min(terms.length - 1, i + 1)); setFlipped(false); }
-      if (e.code === "ArrowLeft") { setIdx((i) => Math.max(0, i - 1)); setFlipped(false); }
-    };
+    function onKey(e: KeyboardEvent) {
+      if (levelId === null || mode !== "learn") return;
+      if (e.key === "ArrowRight") navCard("next");
+      if (e.key === "ArrowLeft") navCard("prev");
+      if (e.code === "Space") {
+        e.preventDefault();
+        const card = document.querySelector(".cursor-pointer");
+        (card as HTMLElement | null)?.click();
+      }
+    }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mode, terms.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [levelId, mode, cardIndex, level?.length]);
 
-  const meta = levelMeta(level);
-  const key = String(level);
-  const t = terms[idx];
-  const audioFile = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/audio/japanese/${slug(t?.uitspraak ?? "")}.wav`;
-  const learnedCount = terms.filter((x) => learned[slug(x.uitspraak)]).length;
-
-  function pick(l: string | number) {
-    setLevel(l);
-    setIdx(0);
-    setFlipped(false);
-    setMode("cards");
-    setQuizDone(false);
-    setQIndex(0);
-    setScore(0);
-    setAnswered(null);
-  }
-
-  function play() {
-    const a = new Audio(audioFile);
-    a.play().catch(() => {});
-  }
-
-  function toggleLearned() {
-    const s = slug(t.uitspraak);
-    setLearned((p) => ({ ...p, [s]: !p[s] }));
-  }
-
-  function answer(i: number) {
-    if (answered !== null) return;
-    setAnswered(i);
-    if (quiz[i].options[i] === quiz[i].answer) setScore((s) => s + 1);
-    setTimeout(() => {
-      if (qIndex + 1 >= quiz.length) {
-        const best = Math.round(((score + (quiz[i].options[i] === quiz[i].answer ? 1 : 0)) / quiz.length) * 100);
-        setProgress((p) => {
-          const prev = p[key] ?? { best: 0, passed: false };
-          return { ...p, [key]: { best: Math.max(prev.best, best), passed: prev.passed || best >= japaneseCourseData.passThreshold * 100 } };
-        });
-        setQuizDone(true);
-      } else {
-        setQIndex((q) => q + 1);
-        setAnswered(null);
-      }
-    }, 900);
-  }
-
-  const pct = terms.length ? Math.round((learnedCount / terms.length) * 100) : 0;
+  const passedBelts = BELT_ORDER.filter((b) => progress.passedLevels[String(b)]).length;
 
   return (
-    <main className="min-h-screen tatami">
-      <div className="mx-auto max-w-3xl px-4 pb-24">
-        <header className="pt-6 pb-4 text-center">
-          <div className="text-5xl font-black tracking-tight">
-            <span style={{ color: "#8b4513" }}>柔道</span> Cursus Japans
-          </div>
-          <p className="mt-2 text-sm text-gray-600">
-            Judo-woorden leren zoals op de mat — met Japanse uitspraak, flashcards en quiz per band.
-          </p>
-        </header>
+    <main className="min-h-screen bg-[#f5f5f0]">
+      <div className="mx-auto max-w-3xl px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
+        <Confetti active={confetti} />
 
-        {/* Level pills */}
-        <div className="flex flex-wrap justify-center gap-2 pb-4">
-          {ORDER.map((l) => {
-            const m = levelMeta(l);
-            const active = l === level;
-            const st = progress[String(l)];
-            return (
-              <button
-                key={String(l)}
-                onClick={() => pick(l)}
-                className="rounded-full border px-4 py-1.5 text-sm font-semibold transition"
-                style={{
-                  background: m.bg,
-                  color: m.text,
-                  borderColor: m.border,
-                  outline: active ? `3px solid ${m.border}` : "none",
-                  outlineOffset: 2,
-                }}
-              >
-                {m.name}
-                {st?.passed ? " ✓" : ""}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Mode tabs */}
-        <div className="mb-6 flex justify-center gap-1 text-sm">
-          {(
-            [
-              ["cards", "Flashcards"],
-              ["quiz", "Quiz"],
-              ["voortgang", "Voortgang & certificaat"],
-            ] as const
-          ).map(([m, label]) => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`rounded-t-lg border-b-2 px-4 py-2 font-medium ${mode === m ? "bg-white shadow-inner border-x border-t border-gray-300 border-b-transparent" : "border-b-transparent text-gray-500 hover:text-gray-800"}`}
-            >
-              {label}
+        {/* header */}
+        <div className="bg-gradient-to-r from-[#a90000] to-[#8c0000] rounded-lg p-4 sm:p-5 md:p-6 text-white shadow-lg relative overflow-hidden">
+          <svg viewBox="0 0 100 80" className="absolute top-0 right-0 w-20 sm:w-32 h-20 sm:h-32 text-white opacity-[0.06]" fill="currentColor">
+            <rect x="5" y="8" width="90" height="6" rx="2" />
+            <rect x="12" y="18" width="76" height="4" rx="1" />
+            <rect x="20" y="18" width="6" height="58" rx="1" />
+            <rect x="74" y="18" width="6" height="58" rx="1" />
+          </svg>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-lg sm:text-2xl font-bold truncate">Cursus Japans</h1>
+              <p className="text-white/80 mt-1 text-xs sm:text-sm">Examentrainer voor de Japanse judo-terminologie — met echte uitspraak</p>
+            </div>
+            <button onClick={() => setSoundOn(!soundOn)} className={`p-2 rounded-lg transition-colors ${soundOn ? "text-white bg-white/20" : "text-white/40"}`} title={soundOn ? "Geluid uit" : "Geluid aan"}>
+              {soundOn ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
             </button>
-          ))}
+          </div>
+          <div className="w-10 sm:w-16 h-0.5 sm:h-1 bg-white/30 rounded-lg mt-2 sm:mt-3" />
         </div>
 
-        {mode === "cards" && t && (
-          <section>
-            <div className="card3d mx-auto max-w-xl" onClick={() => setFlipped((f) => !f)}>
-              <div className={`card-inner relative h-56 sm:h-64 cursor-pointer ${flipped ? "flipped" : ""}`}>
-                <div
-                  className="card-face absolute inset-0 flex flex-col items-center justify-center rounded-2xl border-2 bg-white shadow-lg"
-                  style={{ borderColor: meta.border }}
-                >
-                  <div className="text-4xl font-extrabold tracking-wide">{t.uitspraak}</div>
-                  <div className="mt-2 text-xs uppercase tracking-widest text-gray-400">{t.categorie}</div>
-                  <div className="mt-6 text-xs text-gray-400">klik om te draaien · spatiebalk</div>
-                </div>
-                <div
-                  className="card-face card-back absolute inset-0 flex flex-col items-center justify-center rounded-2xl border-2 text-white shadow-lg"
-                  style={{ background: meta.text, borderColor: meta.border }}
-                >
-                  <div className="px-8 text-center text-2xl font-bold">{t.nederlands}</div>
-                  <div className="mt-4 text-xs opacity-80">{t.uitspraak}</div>
-                </div>
+        {levelId === null ? (
+          <>
+            {/* voortgang */}
+            <div className="bg-white rounded-lg shadow-sm border border-[#e9e0cf] p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-gray-800 text-sm">Jouw voortgang</h3>
+                <span className="text-xs font-bold text-[#a90000]">{passedBelts}/6 banden geslaagd</span>
+              </div>
+              <div className="w-full h-3 bg-gray-100 rounded-lg overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#a90000] to-yellow-500 rounded-lg transition-all duration-1000" style={{ width: `${(passedBelts / 6) * 100}%` }} />
               </div>
             </div>
 
-            <div className="mx-auto mt-5 flex max-w-xl items-center justify-between">
-              <button
-                onClick={toggleLearned}
-                className="rounded-lg border px-4 py-2 text-sm font-medium"
-                style={{
-                  borderColor: learned[slug(t.uitspraak)] ? "#16a34a" : "#d1d5db",
-                  color: learned[slug(t.uitspraak)] ? "#16a34a" : "#6b7280",
-                }}
-              >
-                {learned[slug(t.uitspraak)] ? "✓ geleerd" : "markeer als geleerd"}
-              </button>
-              <button onClick={play} className="rounded-full bg-[#8b4513] px-6 py-3 font-bold text-white shadow hover:bg-[#6f3610]" aria-label="uitspraak beluisteren">
-                🔊 uitspraak
-              </button>
-              <div className="flex gap-2">
-                <button onClick={() => { setIdx((i) => Math.max(0, i - 1)); setFlipped(false); }} className="rounded-lg border border-gray-300 px-4 py-2" aria-label="vorige">←</button>
-                <button onClick={() => { setIdx((i) => Math.min(terms.length - 1, i + 1)); setFlipped(false); }} className="rounded-lg border border-gray-300 px-4 py-2" aria-label="volgende">→</button>
-              </div>
-            </div>
-
-            <div className="mx-auto mt-6 max-w-xl">
-              <div className="h-2 rounded bg-gray-200">
-                <div className="h-2 rounded transition-all" style={{ width: `${pct}%`, background: meta.border }} />
-              </div>
-              <div className="mt-1 flex justify-between text-xs text-gray-500">
-                <span>kaart {idx + 1} / {terms.length}</span>
-                <span>{learnedCount} geleerd ({pct}%)</span>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {mode === "quiz" && (
-          <section className="mx-auto max-w-xl">
-            {!quizDone ? (
-              <>
-                <div className="mb-3 text-sm text-gray-500">vraag {qIndex + 1} van {quiz.length} — 80% is geslaagd</div>
-                <div className="rounded-2xl border-2 bg-white p-4 shadow" style={{ borderColor: meta.border }}>
-                  <div className="text-center text-3xl font-extrabold">{quiz[qIndex]?.q.uitspraak}</div>
-                  <button onClick={play} className="mx-auto mt-3 block rounded-full bg-[#8b4513] px-4 py-1.5 text-sm font-bold text-white">🔊</button>
-                  <div className="mt-4 grid gap-2">
-                    {quiz[qIndex]?.options.map((o, i) => {
-                      const isAnswer = o === quiz[qIndex].answer;
-                      const style = answered === null ? {} : isAnswer ? { background: "#dcfce7", borderColor: "#16a34a" } : answered === i ? { background: "#fee2e2", borderColor: "#dc2626" } : {};
-                      return (
-                        <button key={o} onClick={() => answer(i)} disabled={answered !== null} className="rounded-xl border border-gray-300 px-4 py-3 text-left text-sm hover:border-gray-500" style={style}>
-                          {o}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="rounded-2xl border-2 bg-white p-8 text-center shadow" style={{ borderColor: meta.border }}>
-                <div className="text-5xl font-black">{Math.round((score / quiz.length) * 100)}%</div>
-                <p className="mt-2">
-                  {score / quiz.length >= japaneseCourseData.passThreshold ? (
-                    <span className="font-bold text-green-700">geslaagd voor {meta.name} ✓</span>
-                  ) : (
-                    <span className="text-gray-600">oefen nog even — nog een keer?</span>
-                  )}
-                </p>
-                <button onClick={() => { setQuizDone(false); setQIndex(0); setScore(0); setAnswered(null); }} className="mt-4 rounded-lg border border-gray-300 px-4 py-2">opnieuw</button>
-              </div>
-            )}
-          </section>
-        )}
-
-        {mode === "voortgang" && (
-          <section className="mx-auto max-w-xl">
-            <div className="grid gap-2">
-              {ORDER.map((l) => {
-                const m = levelMeta(l);
-                const st = progress[String(l)];
-                const n = allTerms.filter((x) => x.level === l).length;
+            {/* modulegrid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {ORDER.map((id) => {
+                const m = levelMeta(id);
+                const count = allTerms.filter((x) => x.level === id).length;
+                const unlocked = isUnlocked(id);
+                const passed = progress.passedLevels[String(id)];
                 return (
-                  <div key={String(l)} className="flex items-center justify-between rounded-xl border bg-white px-4 py-3" style={{ borderColor: m.border }}>
-                    <div className="font-semibold" style={{ color: m.text }}>{m.name}</div>
-                    <div className="w-40">
-                      <div className="h-2 rounded bg-gray-200"><div className="h-2 rounded" style={{ width: `${st?.best ?? 0}%`, background: m.border }} /></div>
-                      <div className="mt-1 text-right text-xs text-gray-500">{n} woorden · quiz {st?.best ?? 0}% {st?.passed ? "✓" : ""}</div>
+                  <button
+                    key={String(id)}
+                    onClick={() => openLevel(id)}
+                    disabled={!unlocked}
+                    className={`text-left bg-white rounded-lg border shadow-sm p-4 transition-all ${unlocked ? "border-[#e9e0cf] hover:shadow-md hover:border-[#a90000] cursor-pointer" : "border-[#eee] opacity-50 cursor-not-allowed"}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-lg flex items-center justify-center text-lg font-bold shadow shrink-0" style={{ backgroundColor: m.bg, color: m.text }}>
+                        {typeof id === "number" ? id + 1 : <BookOpen className="w-5 h-5" style={{ color: m.text }} />}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-gray-800 truncate">{m.name}</div>
+                        <div className="text-xs text-gray-400">{count} termen</div>
+                      </div>
+                      <div className="ml-auto shrink-0">
+                        {passed ? <Star className="w-5 h-5 text-yellow-500 fill-yellow-400" /> : !unlocked ? <Lock className="w-4 h-4 text-gray-300" /> : <ChevronRight className="w-4 h-4 text-gray-300" />}
+                      </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
 
-            <div className="mt-8 rounded-xl border border-gray-300 bg-white p-4">
-              <label className="text-sm font-semibold">je naam op het certificaat</label>
-              <input value={naam} onChange={(e) => setNaam(e.target.value)} placeholder="bijv. Daan van Dijk" className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2" />
+            <p className="text-center text-xs text-gray-400">
+              Elke band wordt pas ontgrendeld als je de vorige band hebt gehaald — precies zoals in de club.
+            </p>
+          </>
+        ) : (
+          <>
+            {/* level header */}
+            <div className="bg-gradient-to-r from-[#a90000] to-[#8c0000] rounded-lg p-4 sm:p-5 text-white shadow-lg">
+              <div className="flex items-center gap-3">
+                <button onClick={() => { sounds.click(); setLevelId(null); }} className="p-1.5 rounded-lg hover:bg-white/15" aria-label="terug naar modules">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="w-11 h-11 rounded-lg flex items-center justify-center text-lg font-bold shadow shrink-0" style={{ backgroundColor: meta!.bg }}>
+                  {typeof levelId === "number" ? levelId + 1 : "📚"}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-base sm:text-lg font-bold truncate">{meta!.name}</h2>
+                  <p className="text-white/70 text-xs">{level!.length} termen</p>
+                </div>
+                {progress.passedLevels[String(levelId)] && (
+                  <div className="ml-auto flex items-center gap-1 bg-green-500/20 px-3 py-1 rounded-lg shrink-0">
+                    <Star className="w-4 h-4 text-yellow-300" />
+                    <span className="text-xs font-bold text-green-200">Geslaagd!</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div id="cert-print" className="mt-6 rounded-xl bg-white p-8 text-center shadow" style={{ border: "4px double #8b4513" }}>
-              <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Certificaat</div>
-              <div className="mt-1 text-3xl font-black">Cursus Japans</div>
-              <div className="mt-6 text-sm text-gray-500">bevestig dat</div>
-              <div className="mt-1 text-2xl font-extrabold text-[#8b4513]">{naam || "…"}</div>
-              <div className="mt-3 text-sm text-gray-500">
-                alle Japanse bandtermen beheerst tot en met{" "}
-                <b>{levelMeta(level).name}</b> — behaald op {vandaag}
-              </div>
-              <div className="mt-6 text-4xl" style={{ color: "#8b4513" }}>柔道</div>
+            {/* mode selector */}
+            <div className="flex bg-[#eae7dd] rounded-lg p-1">
+              <button onClick={() => { setMode("learn"); sounds.click(); }} className={`flex-1 py-2.5 rounded-lg font-bold text-sm uppercase transition-all ${mode === "learn" ? "bg-[#a90000] text-white shadow-md" : "text-gray-500 hover:text-gray-700"}`}>
+                📖 Leren
+              </button>
+              <button onClick={() => { setMode("quiz"); sounds.click(); }} className={`flex-1 py-2.5 rounded-lg font-bold text-sm uppercase transition-all ${mode === "quiz" ? "bg-[#a90000] text-white shadow-md" : "text-gray-500 hover:text-gray-700"}`}>
+                🎯 Examen
+              </button>
             </div>
-            <button onClick={() => window.print()} className="mt-3 w-full rounded-lg bg-[#8b4513] px-4 py-3 font-bold text-white hover:bg-[#6f3610]">certificaat printen</button>
-          </section>
+
+            {mode === "learn" && currentTerm && (
+              <div className="space-y-4">
+                <Flashcard key={cardIndex} term={currentTerm} onFlip={sounds.flip} />
+                <div className="flex items-center justify-center gap-3 sm:gap-4">
+                  <button onClick={() => navCard("prev")} disabled={cardIndex === 0} className="p-2.5 rounded-lg bg-white border border-[#e9e0cf] hover:bg-[#fdf6f6] transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" aria-label="vorige kaart">
+                    <ChevronLeft className="w-5 h-5 text-[#a90000]" />
+                  </button>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-[#e9e0cf]">
+                    <span className="text-sm font-bold text-[#a90000]">{cardIndex + 1}</span>
+                    <div className="w-16 h-2 bg-gray-100 rounded-lg overflow-hidden">
+                      <div className="h-full bg-[#a90000] rounded-lg transition-all" style={{ width: `${((cardIndex + 1) / level!.length) * 100}%` }} />
+                    </div>
+                    <span className="text-xs text-gray-400">/ {level!.length}</span>
+                  </div>
+                  <button onClick={() => navCard("next")} disabled={cardIndex >= level!.length - 1} className="p-2.5 rounded-lg bg-white border border-[#e9e0cf] hover:bg-[#fdf6f6] transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm" aria-label="volgende kaart">
+                    <ChevronRight className="w-5 h-5 text-[#a90000]" />
+                  </button>
+                </div>
+                <p className="text-center text-xs text-gray-400">← → pijltjes op toetsenbord om te navigeren · spatiebalk draait de kaart</p>
+              </div>
+            )}
+
+            {mode === "quiz" && (
+              <QuizMode
+                levelId={levelId}
+                terms={level!}
+                sounds={sounds}
+                onPass={handlePass}
+                onExit={() => setLevelId(null)}
+                onNextLevel={
+                  typeof levelId === "number" && BELT_ORDER.indexOf(levelId) < BELT_ORDER.length - 1
+                    ? () => {
+                        setLevelId(BELT_ORDER[BELT_ORDER.indexOf(levelId) + 1]);
+                        setCardIndex(0);
+                        setMode("learn");
+                      }
+                    : undefined
+                }
+              />
+            )}
+
+            {progress.passedLevels[String(levelId)] && (
+              <>
+                <div id="cert-print" className="bg-white rounded-lg p-6 sm:p-8 text-center shadow-sm" style={{ border: "4px double #a90000" }}>
+                  <div className="text-xs uppercase tracking-[0.3em] text-gray-400">Certificaat</div>
+                  <div className="mt-1 text-2xl sm:text-3xl font-black text-[#8c0000]">Cursus Japans</div>
+                  <div className="mt-5 text-sm text-gray-500">bevestigt dat</div>
+                  <div className="mt-1 text-xl sm:text-2xl font-extrabold text-[#a90000]">{naam || "…"}</div>
+                  <div className="mt-2 text-xs sm:text-sm text-gray-500">
+                    de module <b>{meta!.name}</b> met ≥80% heeft behaald
+                    {progress.best[String(levelId)] ? ` (beste score: ${progress.best[String(levelId)]}%)` : ""}
+                  </div>
+                  <div className="mt-4 text-3xl text-[#a90000]">柔道</div>
+                </div>
+                <div className="flex gap-2">
+                  <input value={naam} onChange={(e) => setNaam(e.target.value)} placeholder="je naam voor het certificaat" className="flex-1 rounded-lg border border-[#e9e0cf] bg-white px-3 py-2 text-sm" />
+                  <button onClick={() => window.print()} className="rounded-lg bg-[#a90000] hover:bg-[#8c0000] px-4 py-2 text-sm font-bold text-white transition-colors">
+                    Print certificaat
+                  </button>
+                </div>
+              </>
+            )}
+          </>
         )}
 
-        <footer className="mt-16 text-center text-xs text-gray-400">
-          Alle audio is vooraf gegenereerd met een lokale tekst-naar-spraakpijplijn (Edge TTS) — geen cloud, geen tracking.
-          Voortgang blijft lokaal in je browser.
+        <footer className="pt-2 pb-4 text-center text-xs text-gray-400">
+          Alle Japanse uitspraken zijn vooraf lokaal gegenereerd met een eigen tekst-naar-spraakpijplijn — geen cloud, geen tracking.
+          <br />
+          Oorspronkelijk gebouwd voor <a className="text-[#a90000] hover:underline" href="https://judoclubmichigami.nl">judoclubmichigami.nl</a>; deze losse versie draait volledig in je browser.
         </footer>
       </div>
     </main>
